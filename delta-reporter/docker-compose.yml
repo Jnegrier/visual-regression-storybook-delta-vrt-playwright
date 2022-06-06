@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+  delta_core:
+    container_name: delta_core_pro
+    image: deltareporter/delta_core:latest
+    environment:
+      - APP_SETTINGS=config.ProductionConfig
+      - DATABASE_URL=postgresql://delta:123123@db/delta_db
+      - DAYS_OLD_MEDIA_DELETE=3
+      - REDIS_URL=redis://redis:6379/0
+      - BROKER_URL=amqp://delta:123123@rabbit//
+    ports:
+      - '5500:5500'
+    restart: on-failure
+    links:
+      - db
+    depends_on:
+      - db
+    command: sh -c "python manage.py db upgrade && gunicorn -b 0.0.0.0:5500 app:app"
+
+  delta_worker:
+    container_name: delta_worker_pro
+    image: deltareporter/delta_core:latest
+    environment:
+      - APP_SETTINGS=config.ProductionConfig
+      - DATABASE_URL=postgresql://delta:123123@db/delta_db
+      - REDIS_URL=redis://redis:6379/0
+      - BROKER_URL=amqp://delta:123123@rabbit//
+    volumes:
+      - '${HOME}/delta-local/delta-core:/app'
+    restart: on-failure
+    links:
+      - redis
+      - rabbit
+    depends_on:
+      - rabbit
+    command: sh -c "python -m celery -A tasks worker --loglevel INFO"
+
+  delta_frontend:
+    container_name: delta_frontend_pro
+    image: deltareporter/delta_frontend:latest
+    ports:
+      - '4000:4000'
+    environment:
+      - DELTA_CORE_URL=http://delta_core:5500
+      - PUBLIC_DELTA_CORE_URL=http://localhost:5500
+      - PORT=4000
+    links:
+      - delta_core
+
+  db:
+      image: postgres:12
+      container_name: delta_database_pro
+      environment:
+        - POSTGRES_USER=delta
+        - POSTGRES_PASSWORD=123123
+        - POSTGRES_DB=delta_db
+      volumes:
+        - ./postgres-data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U delta -d delta_db"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+  redis:
+    image: redis:6.2
+    container_name: delta_redis_pro
+    hostname: redis
+
+  rabbit:
+    hostname: rabbit
+    container_name: delta_rabbit_pro
+    image: rabbitmq:3.8
+    environment:
+      - RABBITMQ_DEFAULT_USER=delta
+      - RABBITMQ_DEFAULT_PASS=123123
