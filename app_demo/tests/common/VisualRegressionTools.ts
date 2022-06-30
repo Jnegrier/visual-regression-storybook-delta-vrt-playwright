@@ -7,6 +7,7 @@ class VisualRegressionTools {
 
     constructor(test: any) {
         const config = {
+            apiUrl: "http://localhost:4200",
             branchName: process.env.BRANCH_NAME || "develop",
             project: "55cab12a-939b-4d3d-b74c-72d94337b431",
             apiKey: "VCDWD26N6M4GNFQ4ZJ5WSY8CBPKF",
