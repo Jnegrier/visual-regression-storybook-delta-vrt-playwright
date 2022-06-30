@@ -7,10 +7,9 @@ class VisualRegressionTools {
 
     constructor(test: any) {
         const config = {
-            apiUrl: "http://localhost:4200",
-            branchName: process.env.BRANCH_NAME || "master",
-            project: "00ff974c-5ac2-4a63-bd81-73603f2704b4",
-            apiKey: "785ZFZ90DB4SY6GJ0VC91A10EKXW",
+            branchName: process.env.BRANCH_NAME || "develop",
+            project: "55cab12a-939b-4d3d-b74c-72d94337b431",
+            apiKey: "VCDWD26N6M4GNFQ4ZJ5WSY8CBPKF",
             enableSoftAssert: true,
             ciBuildId: process.env.GITHUB_SHA || new Date().getTime().toString(36),
           };
